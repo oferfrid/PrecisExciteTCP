@@ -69,15 +69,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/mmgr_dal_PrecisExcite.dll"
+				OutputFile="$(OutDir)/mmgr_dal_PrecisExciteTCP.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/PrecisExcite.pdb"
+				ProgramDatabaseFile="$(OutDir)/PrecisExciteTCP.pdb"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary="$(OutDir)/PrecisExcite.lib"
+				ImportLibrary="$(OutDir)/PrecisExciteTCP.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -154,15 +154,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/mmgr_dal_PrecisExcite.dll"
+				OutputFile="$(OutDir)/mmgr_dal_PrecisExciteTCP.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/PrecisExcite.pdb"
+				ProgramDatabaseFile="$(OutDir)/PrecisExciteTCP.pdb"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary="$(OutDir)/PrecisExcite.lib"
+				ImportLibrary="$(OutDir)/PrecisExciteTCP.lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -244,7 +244,7 @@
 				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary="$(OutDir)/PrecisExcite.lib"
+				ImportLibrary="$(OutDir)/PrecisExciteTCP.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -327,7 +327,7 @@
 				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
-				ImportLibrary="$(OutDir)/PrecisExcite.lib"
+				ImportLibrary="$(OutDir)/PrecisExciteTCP.lib"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -371,7 +371,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PrecisExcite.cpp"
+				RelativePath=".\PrecisExciteTCP.cpp"
 				>
 			</File>
 			<File
@@ -393,7 +393,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\PrecisExcite.h"
+				RelativePath=".\PrecisExciteTCP.h"
 				>
 			</File>
 			<File

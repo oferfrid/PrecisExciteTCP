@@ -852,6 +852,8 @@ ILTurret::ILTurret():
    CreateProperty(MM::g_Keyword_Description, description_.c_str(), MM::String, true);
 
    //UpdateStatus();
+
+   EnableDelay(); // signals that the delay setting will be used
 }
 
 ILTurret::~ILTurret()

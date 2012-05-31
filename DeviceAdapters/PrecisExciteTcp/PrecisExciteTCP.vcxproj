@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>PrecisExcite</ProjectName>
+    <ProjectName>PrecisExciteTCP</ProjectName>
     <ProjectGuid>{DCAF2299-3620-40FB-9E55-62A860FD67F2}</ProjectGuid>
     <RootNamespace>PrecisExcite</RootNamespace>
     <Keyword>Win32Proj</Keyword>

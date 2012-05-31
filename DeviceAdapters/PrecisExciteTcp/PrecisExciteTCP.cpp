@@ -4,7 +4,7 @@
 // SUBSYSTEM:     DeviceAdapters
 //-----------------------------------------------------------------------------
 // DESCRIPTION:   PrecisExcite controller adapter
-// COPYRIGHT:     University of California, San Francisco, 2006
+// COPYRIGHT:     Hebrew university of Jerusalem
 // LICENSE:       This file is distributed under the BSD license.
 //                License text is included with the source distribution.
 //
@@ -15,9 +15,9 @@
 //                IN NO EVENT SHALL THE COPYRIGHT OWNER OR
 //                CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //                INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
-// AUTHOR:        Nico Stuurman, 02/27/2006
+// AUTHOR:        Ofer Fridman & Sivan Pearl May 2012
 //
-// NOTE:          Based on Ludl controller adpater by Nenad Amodaj
+// NOTE:          Based on PrecieExcite adpater by Nico S
 //
 
 
@@ -56,7 +56,7 @@ const char* g_Keyword_Trigger = "Trigger";
 const char* g_Keyword_Trigger_Sequence = "TriggerSequence";
 const char * carriage_return = "\r";
 const char * line_feed = "\n";
-
+const int TIME_TO_WAIT_FOR_TCP = 1000;
 
 
 using namespace std;
@@ -96,8 +96,8 @@ MODULE_API void DeleteDevice(MM::Device* pDevice)
 
 PrecisExciteTCP::PrecisExciteTCP() :
    initialized_(false),
-   tcpport_("18259"),   
-   IP_("192.168.0.252"),
+   tcpport_("18259"),   //default value of CoolLed
+   IP_("192.168.0.252"), //default value of CoolLed
    intensity_(0),
    state_(0),
    busy_(false),
@@ -162,23 +162,16 @@ int PrecisExciteTCP::Initialize()
 	
 	ConnectTCP(IP_,tcpport_);
 	
-   ReadGreeting(); //TODO Create a connection
+   ReadGreeting(); 
    int result = ReadChannelLabels();
    if (result != DEVICE_OK)
 	   return result;
 
-  LogMessage("PrecisExciteTCP::Initialize() after readGreeting",1);
+  
    GenerateChannelChooser();
-   LogMessage("PrecisExciteTCP::Initialize() after GenerateChannelChooser",1);
    GeneratePropertyIntensity();
-   LogMessage("PrecisExciteTCP::Initialize() after GeneratePropertyIntensity",1);
    GeneratePropertyState();
-   LogMessage("PrecisExciteTCP::Initialize() after GeneratePropertyState",1);
-  // GeneratePropertyTrigger();
-   //LogMessage("Controller::Initialize() after GeneratePropertyTrigger");
-  // GeneratePropertyTriggerSequence();
-   //LogMessage("Controller::Initialize() after GeneratePropertyTriggerSequence");
-   
+    
    initialized_ = true;
    return HandleErrors(); 
    
@@ -188,9 +181,7 @@ int PrecisExciteTCP::Initialize()
 
 void PrecisExciteTCP::ReadGreeting()
 {
-	LogMessage("Reading greeting ",1);
 	string buf_string_=SendCommand("\n");   
-
 }
 
 
@@ -198,8 +189,7 @@ int PrecisExciteTCP::ReadChannelLabels()
 {
  
    string buf_string_=SendCommand("LAMS\n");
-   LogMessage("IN READCHANNELSLAbel");
-   LogMessage(buf_string_.c_str());
+   LogMessage(buf_string_.c_str(),1);
    istringstream stream(buf_string_);
    string sub;
    while(getline(stream, sub)) 
@@ -208,8 +198,9 @@ int PrecisExciteTCP::ReadChannelLabels()
 	{
 		channelLetters_.push_back(sub[4]);
 		 string label = sub.substr(6);
-         StripString(label);
-         channelLabels_.push_back(label);
+
+         string label1 = trim(label);
+         channelLabels_.push_back(label1);
 	}
    }
 
@@ -217,10 +208,9 @@ int PrecisExciteTCP::ReadChannelLabels()
    if (channelLabels_.size() == 0)
 	   return DEVICE_ERR;
    else{
-	   LogMessage("IN READCHANNELSLAbel:: have more than 0 channelLables");
 	   stringstream msg;
 	   msg<<"chanelLaeblse size is :"<<channelLabels_.size()<<line_feed	;
-	   LogMessage(msg.str());
+	   LogMessage(msg.str(),1);
 	   return DEVICE_OK;
    }
 }
@@ -239,13 +229,12 @@ void PrecisExciteTCP::GeneratePropertyState()
 }
 void PrecisExciteTCP::GenerateChannelChooser()
 {
-   if (! channelLabels_.empty()) {  
-
+   if (! channelLabels_.empty()) 
+   {  
+	   
       CPropertyAction* pAct;
       pAct = new CPropertyAction (this, &PrecisExciteTCP::OnChannelLabel);
       CreateProperty("ChannelLabel", channelLabels_[0].c_str(), MM::String, false, pAct);
-	   LogMessage("GenerateChannelChooser channel labels: " ,1);
-	   LogMessage(channelLabels_[0].c_str() ,1);
       SetAllowedValues("ChannelLabel",channelLabels_);
       SetProperty("ChannelLabel",channelLabels_[0].c_str());
             
@@ -268,19 +257,11 @@ void PrecisExciteTCP::GeneratePropertyIntensity()
 
 void PrecisExciteTCP::GeneratePropertyTrigger()
 {
-	//CPropertyAction* pAct = new CPropertyAction (this, &PrecisExciteTCP::OnTrigger);
- //  CreateProperty("Trigger", "Off", MM::String, false, pAct);
- //  for (TriggerType i=OFF;i<=FOLLOW_PULSE;i=TriggerType(i+1))
-	//	AddAllowedValue("Trigger", TriggerLabels[i].c_str());
- //  SetProperty("Trigger","Off");
+
 }
 
 void PrecisExciteTCP::GeneratePropertyTriggerSequence()
 {
-   int ret;
-   CPropertyAction* pAct = new CPropertyAction (this, &PrecisExciteTCP::OnTriggerSequence);
-   ret = CreateProperty(g_Keyword_Trigger_Sequence, "ABCD0", MM::String, false, pAct);
-   SetProperty(g_Keyword_Trigger_Sequence, "ABCD0");
 }
 
 
@@ -345,7 +326,6 @@ int PrecisExciteTCP::OnIP(MM::PropertyBase* ipProp, MM::ActionType eAct)
 
       ipProp->Get(IP_);
    }
-	//return DEVICE_OK;
    return HandleErrors(); 
 }
 
@@ -374,7 +354,6 @@ int PrecisExciteTCP::OnTrigger(MM::PropertyBase* pProp, MM::ActionType eAct)
 
    }
   return HandleErrors();
-  // return DEVICE_OK;
 }
 
 
@@ -390,7 +369,6 @@ int PrecisExciteTCP::OnTriggerSequence(MM::PropertyBase* pProp, MM::ActionType e
       SetTrigger();
    }
    return HandleErrors();
-   //return DEVICE_OK;
 }
 
 
@@ -402,6 +380,7 @@ int PrecisExciteTCP::OnChannelLabel(MM::PropertyBase* pProp, MM::ActionType eAct
    }
    else if (eAct == MM::AfterSet)
    {
+	   LogMessage(currentChannelLabel_.c_str(),1); 
       GetState(state_);
       pProp->Get(currentChannelLabel_);
       for (unsigned i=0;i<channelLabels_.size();i++)
@@ -412,21 +391,17 @@ int PrecisExciteTCP::OnChannelLabel(MM::PropertyBase* pProp, MM::ActionType eAct
          }
    }
    return HandleErrors();
-   //return DEVICE_OK;
 }
 
 int PrecisExciteTCP::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
 {
-	 LogMessage("ONSTATE",1);    
    if (eAct == MM::BeforeGet)
    {
-	  LogMessage("ONSTATE::before get",1);    
       GetState(state_);
       pProp->Set(state_);
    }
    else if (eAct == MM::AfterSet)
    {
-	   LogMessage("ONSTATE::After Set",1); 
       pProp->Get(state_);
       SetState(state_);
    }
@@ -482,44 +457,36 @@ void PrecisExciteTCP::GetIntensity(long& intensity, long index)
 
 void PrecisExciteTCP::SetState(long state)
 {
-	 LogMessage("SetState::start",1);
    state_ = state;
    stringstream msg;
-    LogMessage("SetState:: B4 Illuminate",1);
    Illuminate();
-   LogMessage("SetState:: After Illuminate",1);
    // Set timer for the Busy signal
    changedTime_ = GetCurrentMMTime();
 }
 
 void PrecisExciteTCP::GetState(long &state)
-{
-	LogMessage("in get State",1);    
-   
+{  
       long stateTmp = 0;
 	  string buf_string_=SendCommand("C?\n");
-	  LogMessage("GetState:: After send command",1);
 	  LogMessage(buf_string_.c_str(),1);
 	  istringstream iss(buf_string_);
 	  do
     {
 		string sub;
         iss >> sub;
-		 LogMessage("GetState::sub is" ,1);
-		 LogMessage(sub.c_str() ,1);
 		 if(sub.length()>5 && sub[5]=='N')
 			stateTmp=1;
     } while (iss);
      
-      state = stateTmp;
-
-   LogMessage("finish get State",1);    
+      state = stateTmp; 
 }
 
 
 void PrecisExciteTCP::SetTrigger()
 {
-   stringstream msg;
+	//Trigger not suported
+
+   /*stringstream msg;
    msg << "SQX" << carriage_return;
 
    for (unsigned i=0;i<triggerSequence_.size();i++)
@@ -529,32 +496,23 @@ void PrecisExciteTCP::SetTrigger()
 
    triggerMessage_ = msg.str();
 
-   Illuminate();
+   Illuminate();*/
 
 }
 
 
 void PrecisExciteTCP::Illuminate()
 {
-	LogMessage("Illuminate:: the begining",1);
 	 stringstream msg;
    if (state_==0)
 	   
    {
-	   LogMessage("Illuminate:: state --0",1);
 		msg  << "C" << channelLetters_[currentChannel_] << "F" << line_feed ;
-
    }
    else if (state_==1)
    {
-	   LogMessage("Illuminate:: state --1",1);
-
- 
-		 msg <<  "C" << channelLetters_[currentChannel_] << "N"  << line_feed ;
- 
+	  msg <<  "C" << channelLetters_[currentChannel_] << "N"  << line_feed ;
    }
-LogMessage("Illuminate:: B4 SendCommand",1);  
-
    SendCommand(msg.str());
 }
 
@@ -578,66 +536,43 @@ void PrecisExciteTCP::InitializeTCPVars()
 
 string PrecisExciteTCP::SendCommand(string  cmd )
 {
-	stringstream msg;
-	msg<<"SendCommand:: B4 SendCommand"<<cmd;
-	LogMessage(msg.str());    
 	char *sendbuf = _strdup(cmd.c_str());
 	    // Send an initial buffer
     int iResult = send( ConnectSocket, sendbuf, (int)strlen(sendbuf), 0 );
-	LogMessage("SendCommand:: after Send",1);    
-    if (iResult == SOCKET_ERROR) {
-		LogMessage("SendCommand:: ERROR in socket");  
-//        printf("send failed with error: %d\n", WSAGetLastError());
+    if (iResult == SOCKET_ERROR) {		
         closesocket(ConnectSocket);
         WSACleanup();
-       // return 1;
     }    
-	LogMessage("SendCommand:: sleep",1);  
-	Sleep(1000);
-	
+
+	Sleep(TIME_TO_WAIT_FOR_TCP); // wait for tcp socket to complete.
 	string  Result="";
-	    char recvbuf[DEFAULT_BUFLEN];
-		
+	    char recvbuf[DEFAULT_BUFLEN];		
 		int recvbuflen = DEFAULT_BUFLEN;
 		memset(recvbuf,0,recvbuflen);	
-		LogMessage("SendCommand:: before recv",1);  
 		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-		LogMessage("SendCommand:: after recv",1);  
         if ( iResult > 0 )
-		{
-			
-			Result.assign(recvbuf, iResult);
-			LogMessage("SendCommand:: received",1);  
-			LogMessage(Result.c_str());  
-			/*printf("Bytes received: %d\n", iResult);			
-			printf("Data received: %s\n",Result.c_str() );*/
-			
+		{			
+			Result.assign(recvbuf, iResult);						
 		}
         else if ( iResult == 0 )
-			LogMessage("Fron reading: Connection closed",1);  
-            //printf("Fron reading: Connection closed\n");
+			LogMessage("Fron reading: Connection closed");  
         else{
-			LogMessage("recv failed blablabla bytes:",1); 
-			//printf("recv failed blablabla bytes: %d\n",iResult);
-           // printf("recv failed with error: %d\n", WSAGetLastError());
+			LogMessage("recv failed"); 
 		}
-
 		return Result;
 }
 
 int PrecisExciteTCP::ConnectTCP(string IP,string port)
 {
-	LogMessage("ConnectTCP");
+	LogMessage("Connect to TCP");
 	 // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-	 LogMessage("WSAStartup Result:");
     if (iResult != 0) {
-        LogMessage("WSAStartup failed with error: \n", 1);
+        LogMessage("WSAStartup failed with error: \n");
         return 1;
     }
 
     ZeroMemory( &hints, sizeof(hints) );
-	 LogMessage("ZeroMemory");
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
@@ -647,15 +582,12 @@ int PrecisExciteTCP::ConnectTCP(string IP,string port)
 	p1=IP.c_str();	
 	const char *p2;
 	p2=port.c_str();	
-	 LogMessage("B4getaddrinfo");
 	iResult = getaddrinfo(p1, p2, &hints, &result);
     if ( iResult != 0 ) {
-        LogMessage("getaddrinfo failed with error:\n", 1);
+        LogMessage("getaddrinfo failed with error:\n");
         WSACleanup();
         return 1;
     }
-
-	LogMessage("B4 Attempt to connect to an address until one succeeds");
     // Attempt to connect to an address until one succeeds
     for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
 
@@ -663,11 +595,10 @@ int PrecisExciteTCP::ConnectTCP(string IP,string port)
         ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, 
             ptr->ai_protocol);
         if (ConnectSocket == INVALID_SOCKET) {
-            LogMessage("socket failed with error: \n", 1);
+            LogMessage("socket failed with error: \n");
             WSACleanup();
             return 1;
         }
-		LogMessage("B4 connect");
         // Connect to server.
         iResult = connect( ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
@@ -677,33 +608,26 @@ int PrecisExciteTCP::ConnectTCP(string IP,string port)
         }
         break;
     }
-	LogMessage("B4 freeaddrinfo");
     freeaddrinfo(result);
-	LogMessage("After freeaddrinfo");
     if (ConnectSocket == INVALID_SOCKET) {
         LogMessage("Unable to connect to server!\n");
         WSACleanup();
         return 1;
-    }
-	LogMessage("Returning ok\n");
+    }	
 	return DEVICE_OK; //all went well....
 }
 ///////////////////////////////////////////////////////////////////////////////
 // String utilities
 ///////////////////////////////////////////////////////////////////////////////
 
-
-void PrecisExciteTCP::StripString(string& StringToModify)
-{
-   if(StringToModify.empty()) return;
-
-   size_t startIndex = StringToModify.find_first_not_of(" ");
-   size_t endIndex = StringToModify.find_last_not_of(" ");
-   string tempString = StringToModify;
-   StringToModify.erase();
-
-   StringToModify = tempString.substr(startIndex, (endIndex-startIndex+ 1) );
+   
+string PrecisExciteTCP::trim(const string& str) {
+size_t start = str.find_first_not_of(" \t\n\r");
+if(start == string::npos) return "";
+return str.substr(start, str.find_last_not_of(" \t\n\r") - start + 1);
 }
+
+
 
 //********************
 // Shutter API

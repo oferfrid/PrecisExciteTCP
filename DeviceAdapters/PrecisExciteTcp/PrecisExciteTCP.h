@@ -54,7 +54,7 @@ public:
 
 	void GetName(char* pszName) const;
 	bool Busy();
-	//MM::DeviceType GetType() const {return MM::GenericDevice;}
+
 
 	// Shutter API
 	int SetOpen(bool open = true);
@@ -64,11 +64,9 @@ public:
 	// action interface
 	// ----------------
 	int OnPort(MM::PropertyBase* pProp, MM::ActionType eAct);
-	//int OnCommand(MM::PropertyBase* pProp, MM::ActionType eAct);
+
 	int OnIP(MM::PropertyBase* pProp, MM::ActionType eAct);
-	//int OnOpeningTime(MM::PropertyBase* pProp, MM::ActionType eAct);
-	// int OnClosingTime(MM::PropertyBase* pProp, MM::ActionType eAct);
-	//int OnShutterName(MM::PropertyBase* pProp, MM::ActionType eAct);
+	
 	int OnChannelLabel(MM::PropertyBase* pProp, MM::ActionType eAct);
 	int OnIntensity(MM::PropertyBase* pProp, MM::ActionType eAct, long index);
 	int OnState(MM::PropertyBase* pProp, MM::ActionType eAct);
@@ -77,18 +75,7 @@ public:
 
 private:
 	int ExecuteCommand(const std::string& cmd);
-	//bool busy_;
-	//bool initialized_;
-	//// MMCore name of serial port
-	//std::string port_;  
 	std::string IP_;
-	//// address of controller on serial chain (x, 0-7)
-	//std::string address_;   
-	//// Time that last command was sent to shutter
-	//MM::MMTime changedTime_;
-	//long intensity_;
-	//long state_;
-	//int error_; 
 	long intensity_;
 	long state_;
 	int error_;
@@ -99,10 +86,7 @@ private:
 	char currentChannelLetter_;
 	string currentChannelLabel_;
 	long currentChannel_;
-	//unsigned char buf_[1000];
-	//string buf_string_;
-	//vector<string> buf_tokens_;
-	//unsigned long buf_bytes_;
+
 	long armState_;
 	TriggerType triggerMode_;
 
@@ -139,15 +123,14 @@ private:
 	void SetTrigger();
 	 int HandleErrors();
 
-	//void Send(string cmd);
-	//int SendTCPCommand( string sendData );
+	
   	void    InitializeTCPVars();
 	int ConnectTCP(string IP,string port);
-	//void ReceiveOneLine();
+
 	string GetTCPAnswer();
 	string SendCommand(string  cmd );
 
 
-	void StripString(string& StringToModify);
+	string  trim(const string& str);
 };
 #endif // _PrecisExciteTCP_H_

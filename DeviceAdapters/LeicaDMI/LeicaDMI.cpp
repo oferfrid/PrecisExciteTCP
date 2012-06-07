@@ -745,6 +745,8 @@ bool TLShutter::Busy()
    return busy;
 }
 
+
+
 int TLShutter::Shutdown()
 {
    if (initialized_)
@@ -930,12 +932,19 @@ int ILTurret::Shutdown()
 
 bool ILTurret::Busy()
 {
-   bool busy;
-   int ret = g_ScopeModel.ILTurret_.GetBusy(busy);
-   if (ret != DEVICE_OK)  // This is bad and should not happen
-      return false;
+   //bool busy;
+   //int ret = g_ScopeModel.ILTurret_.GetBusy(busy);
+   //if (ret != DEVICE_OK)  // This is bad and should not happen
+   //   return false;
 
-   return busy;
+   //return busy;
+   
+   MM::MMTime interval = GetCurrentMMTime() - changedTime_;
+   MM::MMTime delay(GetDelayMs()*1000.0);
+   if (interval < delay)
+      return true;
+   else
+      return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -981,7 +990,10 @@ int ILTurret::OnState(MM::PropertyBase* pProp, MM::ActionType eAct)
                   g_ScopeInterface.SetMethod(*this, *GetCoreCallback(), i);
             }
          }
-         return g_ScopeInterface.SetILTurretPosition(*this, *GetCoreCallback(), pos);
+         int ret= g_ScopeInterface.SetILTurretPosition(*this, *GetCoreCallback(), pos);
+		 changedTime_ = GetCurrentMMTime();
+		 return ret;
+		 
       } else
          return ERR_INVALID_TURRET_POSITION;
    }

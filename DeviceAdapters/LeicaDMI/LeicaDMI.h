@@ -160,6 +160,7 @@ private:
    long pos_;
    std::string name_;
    std::string description_;
+   MM::MMTime changedTime_;
 };
 
 class ObjectiveTurret : public CStateDeviceBase<ObjectiveTurret>

@@ -56,7 +56,7 @@ const char* g_Keyword_Trigger = "Trigger";
 const char* g_Keyword_Trigger_Sequence = "TriggerSequence";
 const char * carriage_return = "\r";
 const char * line_feed = "\n";
-const int TIME_TO_WAIT_FOR_TCP = 1000;
+const int TIME_TO_WAIT_FOR_TCP = 50;
 
 
 using namespace std;
